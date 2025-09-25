@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerMarg</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* CSS Custom Properties for Theming */
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #ff6b6b;
+            --text-color: #333;
+            --bg-color: #ffffff;
+            --surface-color: rgba(255, 255, 255, 0.95);
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --border-color: #e0e0e0;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #ff6b6b;
+            --text-color: #ffffff;
+            --bg-color: #1a1a1a;
+            --surface-color: rgba(30, 30, 30, 0.95);
+            --card-bg: #2d2d2d;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --border-color: #444;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+        }
+
+        [data-theme="ocean"] {
+            --primary-color: #0077be;
+            --secondary-color: #00a8cc;
+            --accent-color: #ff8c00;
+            --text-color: #333;
+            --bg-color: #ffffff;
+            --surface-color: rgba(255, 255, 255, 0.95);
+            --card-bg: #ffffff;
+            --shadow: rgba(0, 119, 190, 0.1);
+            --border-color: #e0f4ff;
+            --success-color: #00a8cc;
+            --warning-color: #ff8c00;
+        }
+
+        [data-theme="forest"] {
+            --primary-color: #2d5a27;
+            --secondary-color: #4a7c59;
+            --accent-color: #ff6b35;
+            --text-color: #2d3748;
+            --bg-color: #f7fafc;
+            --surface-color: rgba(247, 250, 252, 0.95);
+            --card-bg: #ffffff;
+            --shadow: rgba(45, 90, 39, 0.1);
+            --border-color: #e2e8f0;
+            --success-color: #38a169;
+            --warning-color: #ed8936;
+        }
+
+        [data-theme="sunset"] {
+            --primary-color: #e53e3e;
+            --secondary-color: #ff6b6b;
+            --accent-color: #ffd23f;
+            --text-color: #2d3748;
+            --bg-color: #fff5f5;
+            --surface-color: rgba(255, 245, 245, 0.95);
+            --card-bg: #ffffff;
+            --shadow: rgba(229, 62, 62, 0.1);
+            --border-color: #fed7d7;
+            --success-color: #38a169;
+            --warning-color: #ed8936;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            background: var(--surface-color);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 20px var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 1rem;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links li {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+
+        .nav-links li:hover, .nav-links li.active {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Theme Selector */
+        .theme-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        .theme-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .theme-btn.active {
+            border-color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .theme-default { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .theme-dark { background: linear-gradient(135deg, #2d2d2d, #1a1a1a); }
+        .theme-ocean { background: linear-gradient(135deg, #0077be, #00a8cc); }
+        .theme-forest { background: linear-gradient(135deg, #2d5a27, #4a7c59); }
+        .theme-sunset { background: linear-gradient(135deg, #e53e3e, #ff6b6b); }
+
+        /* Mobile Navigation */
+        .mobile-nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-color);
+            padding: 0.5rem;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 80px auto 0;
+            padding: 2rem;
+            min-height: calc(100vh - 160px);
+        }
+
+        /* Page Sections */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Landing Page Styles */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: slideInDown 0.8s ease-out;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            animation: slideInUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes slideInDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+            animation: slideInUp 0.8s ease-out 0.4s both;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+            animation: slideInUp 0.8s ease-out 0.6s both;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 10px 40px var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .question-card {
+            background: var(--bg-color);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .question-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .options {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option {
+            padding: 1rem;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+        }
+
+        .option:hover {
+            border-color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .quiz-result {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 15px;
+            margin-top: 2rem;
+        }
+
+        /* Career and College Cards */
+        .career-grid, .college-list, .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .career-card, .college-card, .resource-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 20px var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .career-card:hover, .college-card:hover, .resource-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px var(--shadow);
+        }
+
+        /* Timeline Styles */
+        .timeline-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .timeline-date {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .timeline-date.urgent {
+            background: var(--accent-color);
+        }
+
+        /* Profile Styles */
+        .profile-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: var(--surface-color);
+            backdrop-filter: blur(10px);
+            padding: 3rem 0 1rem;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul li a {
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: var(--primary-color);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .mobile-nav-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                flex-direction: column;
+                background: var(--surface-color);
+                backdrop-filter: blur(10px);
+                width: 100%;
+                transition: left 0.3s ease;
+                padding: 2rem 0;
+                box-shadow: 0 2px 20px var(--shadow);
+                z-index: 999;
+            }
+            
+            .nav-links.mobile-open {
+                left: 0;
+            }
+
+            .nav-links li {
+                margin: 0.5rem 0;
+                text-align: center;
+            }
+
+            .theme-selector {
+                margin: 1rem 0;
+                justify-content: center;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .career-grid, .college-list, .resources-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+        }
+
+        /* Utility Classes */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px var(--shadow);
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Animation for theme changes */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* College specific styles */
+        .college-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            color: white;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 0.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .view-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border: 2px solid var(--border-color);
+        }
+
+        .bookmark-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .bookmark-btn.bookmarked {
+            color: var(--accent-color);
+        }
+
+        .bookmark-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            color: var(--text-color);
+        }
+
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .close:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body data-theme="default">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i> CareerMarg
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-page="home">
+                    <i class="fas fa-home"></i> Home
+                </li>
+                <li class="nav-item" data-page="quiz">
+                    <i class="fas fa-question-circle"></i> Quiz
+                </li>
+                <li class="nav-item" data-page="careers">
+                    <i class="fas fa-briefcase"></i> Careers
+                </li>
+                <li class="nav-item" data-page="colleges">
+                    <i class="fas fa-university"></i> Colleges
+                </li>
+                <li class="nav-item" data-page="timeline">
+                    <i class="fas fa-calendar"></i> Timeline
+                </li>
+                <li class="nav-item" data-page="resources">
+                    <i class="fas fa-book"></i> Resources
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <i class="fas fa-user"></i> Profile
+                </li>
+                <div class="theme-selector">
+                    <div class="theme-btn theme-default active" data-theme="default" title="Default Theme"></div>
+                    <div class="theme-btn theme-dark" data-theme="dark" title="Dark Theme"></div>
+                    <div class="theme-btn theme-ocean" data-theme="ocean" title="Ocean Theme"></div>
+                    <div class="theme-btn theme-forest" data-theme="forest" title="Forest Theme"></div>
+                    <div class="theme-btn theme-sunset" data-theme="sunset" title="Sunset Theme"></div>
+                </div>
+            </ul>
+            <button class="mobile-nav-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Landing Page -->
+        <div class="page active" id="home">
+            <div class="hero">
+                <h1>Confused about which course to choose?</h1>
+                <p>We'll guide you to the perfect career path with personalized recommendations</p>
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" data-page="quiz">
+                        <i class="fas fa-play"></i> Take Quiz
+                    </button>
+                    <button class="btn btn-secondary" data-page="colleges">
+                        <i class="fas fa-search"></i> Find Colleges
+                    </button>
+                    <button class="btn btn-secondary" data-page="careers">
+                        <i class="fas fa-rocket"></i> Explore Careers
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">50,000+</div>
+                    <div>Students Guided</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">500+</div>
+                    <div>Colleges Listed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100+</div>
+                    <div>Career Paths</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">95%</div>
+                    <div>Success Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Page -->
+        <div class="page" id="quiz">
+            <div class="quiz-container">
+                <h2><i class="fas fa-brain"></i> Aptitude & Interest Quiz</h2>
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div id="quiz-content">
+                    <!-- Quiz questions will be populated here -->
+                </div>
+                <div class="quiz-controls" style="text-align: center; margin-top: 2rem;">
+                    <button class="btn btn-primary" id="next-btn" style="display: none;">Next Question</button>
+                    <button class="btn btn-primary" id="submit-btn" style="display: none;">Submit Quiz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Careers Page -->
+        <div class="page" id="careers">
+            <h2 style="color: white; text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-route"></i> Course to Career Pathways
+            </h2>
+            <div class="career-grid" id="career-grid">
+                <!-- Career cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Colleges Page -->
+        <div class="page" id="colleges">
+            <h2 style="color: white; text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-university"></i> Find Your Perfect College
+            </h2>
+            
+            <div class="college-controls">
+                <div class="filter-group">
+                    <label>Location:</label>
+                    <select id="location-filter">
+                        <option value="">All Locations</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Bangalore">Bangalore</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Pune">Pune</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Stream:</label>
+                    <select id="stream-filter">
+                        <option value="">All Streams</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Commerce">Commerce</option>
+                        <option value="Science">Science</option>
+                        <option value="Arts">Arts</option>
+                        <option value="Management">Management</option>
+                    </select>
+                </div>
+                
+                <div class="view-toggle">
+                    <button class="view-btn active" id="map-view">
+                        <i class="fas fa-map"></i> Map
+                    </button>
+                    <button class="view-btn" id="list-view">
+                        <i class="fas fa-list"></i> List
+                    </button>
+                </div>
+            </div>
+
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="college-list" id="college-list">
+                <!-- College cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Timeline Page -->
+        <div class="page" id="timeline">
+            <h2 style="color: white; text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-calendar-alt"></i> Important Dates & Deadlines
+            </h2>
+            <div class="timeline-container" id="timeline-container">
+                <!-- Timeline items will be populated here -->
+            </div>
+        </div>
+
+        <!-- Resources Page -->
+        <div class="page" id="resources">
+            <h2 style="color: white; text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-book-open"></i> Free Learning Resources
+            </h2>
+            <input type="text" class="search-bar" id="resource-search" placeholder="Search for e-books, courses, scholarships...">
+            <div class="resources-grid" id="resources-grid">
+                <!-- Resource cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div class="page" id="profile">
+            <div class="profile-container">
+                <h2 style="text-align: center; margin-bottom: 2rem;">
+                    <i class="fas fa-user-circle"></i> Your Profile
+                </h2>
+                <div id="login-section">
+                    <div class="login-form">
+                        <div class="form-group">
+                            <label>Username:</label>
+                            <input type="text" id="username" placeholder="Enter username">
+                        </div>
+                        <div class="form-group">
+                            <label>Password:</label>
+                            <input type="password" id="password" placeholder="Enter password">
+                        </div>
+                        <button class="btn btn-primary" id="login-btn">Login</button>
+                        <button class="btn btn-secondary" id="signup-btn">Sign Up</button>
+                    </div>
+                </div>
+                <div id="profile-content" style="display: none;">
+                    <!-- Profile content will be shown after login -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for College Details -->
+    <div id="college-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modal-body">
+                <!-- College details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4><i class="fas fa-graduation-cap"></i> CareerMarg</h4>
+                <p>Your trusted partner in making informed educational decisions. We help students discover their perfect career path through personalized guidance and comprehensive resources.</p>
+                <div class="social-links">
+                    <a href="#" title="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-link"></i> Quick Links</h4>
+                <ul>
+                    <li><a href="#" onclick="navigateToPage('home')">Home</a></li>
+                    <li><a href="#" onclick="navigateToPage('quiz')">Aptitude Quiz</a></li>
+                    <li><a href="#" onclick="navigateToPage('careers')">Career Guidance</a></li>
+                    <li><a href="#" onclick="navigateToPage('colleges')">College Finder</a></li>
+                    <li><a href="#" onclick="navigateToPage('timeline')">Important Dates</a></li>
+                    <li><a href="#" onclick="navigateToPage('resources')">Free Resources</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-info-circle"></i> Support</h4>
+                <ul>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Feedback</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-envelope"></i> Contact Info</h4>
+                <ul>
+                    <li><i class="fas fa-phone"></i> +91 98765 43210</li>
+                    <li><i class="fas fa-envelope"></i> info@courseguidancehub.com</li>
+                    <li><i class="fas fa-map-marker-alt"></i> Mumbai, Maharashtra, India</li>
+                </ul>
+                <div style="margin-top: 1rem;">
+                    <h5>Newsletter</h5>
+                    <p style="font-size: 0.9rem; margin-bottom: 1rem;">Stay updated with latest educational opportunities</p>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="email" placeholder="Your email" style="flex: 1; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-color); color: var(--text-color);">
+                        <button class="btn btn-primary" style="padding: 0.5rem 1rem;">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2024 CareerMarg. All rights reserved. | Empowering students to make informed educational choices.</p>
+        </div>
+    </footer>
+
+    <!-- External Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chatbot Integration -->
+    <script>
+        (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="-VWTUJuE7xefmWwZv0RF7";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>
+    
+    <script>
+        // Application State
+        const AppState = {
+            currentPage: 'home',
+            currentTheme: 'default',
+            user: null,
+            quizResults: null,
+            bookmarkedColleges: [],
+            reminders: [],
+            currentQuestionIndex: 0,
+            quizAnswers: [],
+            map: null
+        };
+
+        // Sample Data
+        const QUIZ_QUESTIONS = [
+            {
+                question: "Which subject do you enjoy the most?",
+                options: [
+                    { text: "Mathematics & Physics", value: "engineering" },
+                    { text: "Business & Economics", value: "commerce" },
+                    { text: "Biology & Chemistry", value: "medical" },
+                    { text: "Literature & History", value: "arts" }
+                ]
+            },
+            {
+                question: "What type of work environment appeals to you?",
+                options: [
+                    { text: "Corporate office with structured tasks", value: "commerce" },
+                    { text: "Laboratory or research facility", value: "science" },
+                    { text: "Creative studio or flexible workspace", value: "arts" },
+                    { text: "Technology companies or startups", value: "engineering" }
+                ]
+            },
+            {
+                question: "Which activity interests you most?",
+                options: [
+                    { text: "Solving complex problems and puzzles", value: "engineering" },
+                    { text: "Analyzing market trends and data", value: "commerce" },
+                    { text: "Helping people and making a difference", value: "medical" },
+                    { text: "Creating and expressing ideas", value: "arts" }
+                ]
+            },
+            {
+                question: "What motivates you the most?",
+                options: [
+                    { text: "High salary and financial stability", value: "commerce" },
+                    { text: "Innovation and technological advancement", value: "engineering" },
+                    { text: "Social impact and helping others", value: "medical" },
+                    { text: "Creative expression and artistic freedom", value: "arts" }
+                ]
+            },
+            {
+                question: "Which skill do you want to develop further?",
+                options: [
+                    { text: "Technical and programming skills", value: "engineering" },
+                    { text: "Communication and leadership", value: "commerce" },
+                    { text: "Research and analytical thinking", value: "science" },
+                    { text: "Creativity and artistic abilities", value: "arts" }
+                ]
+            }
+        ];
+
+        const CAREER_PATHS = [
+            {
+                title: "Engineering Path",
+                icon: "fas fa-cogs",
+                path: ["B.Tech", "Software Engineer", "Senior Developer", "Tech Lead", "CTO"],
+                description: "Build technology solutions and innovate for the future"
+            },
+            {
+                title: "Commerce Path",
+                icon: "fas fa-chart-line",
+                path: ["B.Com", "Accountant", "CA/CFA", "Financial Analyst", "CFO"],
+                description: "Master finance, accounting, and business management"
+            },
+            {
+                title: "Medical Path",
+                icon: "fas fa-heartbeat",
+                path: ["MBBS", "Junior Doctor", "Specialization", "Consultant", "Department Head"],
+                description: "Save lives and contribute to healthcare advancement"
+            },
+            {
+                title: "Arts & Design",
+                icon: "fas fa-palette",
+                path: ["BFA", "Designer", "Creative Director", "Art Director", "Creative Head"],
+                description: "Express creativity and shape visual communication"
+            }
+        ];
+
+        const COLLEGES_DATA = [
+            {
+                id: 1,
+                name: "Indian Institute of Technology",
+                location: "Mumbai",
+                coordinates: [19.0760, 72.8777],
+                courses: ["B.Tech", "M.Tech", "PhD"],
+                stream: "Engineering",
+                cutoff: "JEE Advanced Rank 1-1000",
+                facilities: ["Library", "Hostels", "Labs", "Sports Complex"],
+                contact: "admissions@iit.edu",
+                fees: "₹2.5L per year"
+            },
+            {
+                id: 2,
+                name: "Shri Ram College of Commerce",
+                location: "Delhi",
+                coordinates: [28.6139, 77.2090],
+                courses: ["B.Com", "BA Economics", "BBA"],
+                stream: "Commerce",
+                cutoff: "95%+ in Class 12",
+                facilities: ["Library", "Auditorium", "Computer Labs"],
+                contact: "info@srcc.edu",
+                fees: "₹50K per year"
+            },
+            {
+                id: 3,
+                name: "All India Institute of Medical Sciences",
+                location: "Delhi",
+                coordinates: [28.5672, 77.2100],
+                courses: ["MBBS", "MD", "MS"],
+                stream: "Medical",
+                cutoff: "NEET Rank 1-100",
+                facilities: ["Hospital", "Research Labs", "Hostels"],
+                contact: "admissions@aiims.edu",
+                fees: "₹1.5L per year"
+            },
+            {
+                id: 4,
+                name: "Christ University",
+                location: "Bangalore",
+                coordinates: [12.9716, 77.5946],
+                courses: ["BBA", "B.Com", "BA", "B.Tech"],
+                stream: "Management",
+                cutoff: "85%+ in Class 12",
+                facilities: ["Library", "Sports", "Cafeteria", "Hostels"],
+                contact: "admissions@christuniversity.in",
+                fees: "₹2L per year"
+            },
+            {
+                id: 5,
+                name: "National Institute of Design",
+                location: "Pune",
+                coordinates: [18.5204, 73.8567],
+                courses: ["B.Des", "M.Des"],
+                stream: "Arts",
+                cutoff: "NID Entrance Exam",
+                facilities: ["Studios", "Workshop", "Library"],
+                contact: "info@nid.edu",
+                fees: "₹3L per year"
+            }
+        ];
+
+        const TIMELINE_EVENTS = [
+            {
+                date: "2024-10-15",
+                title: "JEE Main Application Deadline",
+                description: "Last date to apply for JEE Main 2025",
+                category: "Engineering",
+                urgent: false
+            },
+            {
+                date: "2024-11-01",
+                title: "NEET Application Opens",
+                description: "Medical entrance exam applications begin",
+                category: "Medical",
+                urgent: true
+            },
+            {
+                date: "2024-11-15",
+                title: "CA Foundation Exam",
+                description: "Chartered Accountancy Foundation exam",
+                category: "Commerce",
+                urgent: false
+            },
+            {
+                date: "2024-12-01",
+                title: "Design Entrance Exams",
+                description: "NID, NIFT entrance exam dates",
+                category: "Arts",
+                urgent: true
+            },
+            {
+                date: "2025-01-15",
+                title: "College Application Deadlines",
+                description: "Most private colleges deadline",
+                category: "General",
+                urgent: false
+            }
+        ];
+
+        const RESOURCES_DATA = [
+            {
+                id: 1,
+                title: "Mathematics E-Book Collection",
+                type: "E-Book",
+                category: "Academic",
+                icon: "fas fa-book",
+                description: "Complete collection of mathematics books for competitive exams"
+            },
+            {
+                id: 2,
+                title: "Scholarship Database",
+                type: "Scholarship",
+                category: "Financial Aid",
+                icon: "fas fa-graduation-cap",
+                description: "Comprehensive database of scholarships and grants"
+            },
+            {
+                id: 3,
+                title: "Coding Bootcamp",
+                type: "Course",
+                category: "Skill Development",
+                icon: "fas fa-code",
+                description: "Free programming courses for beginners"
+            },
+            {
+                id: 4,
+                title: "Communication Skills",
+                type: "Course",
+                category: "Soft Skills",
+                icon: "fas fa-comments",
+                description: "Improve your communication and presentation skills"
+            },
+            {
+                id: 5,
+                title: "Career Guidance Manual",
+                type: "E-Book",
+                category: "Career",
+                icon: "fas fa-compass",
+                description: "Complete guide to career planning and development"
+            },
+            {
+                id: 6,
+                title: "Financial Literacy Course",
+                type: "Course",
+                category: "Finance",
+                icon: "fas fa-dollar-sign",
+                description: "Learn personal finance and investment basics"
+            }
+        ];
+
+        // Theme Management
+        function initializeThemes() {
+            const themeButtons = document.querySelectorAll('.theme-btn');
+            themeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const theme = btn.dataset.theme;
+                    switchTheme(theme);
+                });
+            });
+        }
+
+        function switchTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            AppState.currentTheme = theme;
+            
+            // Update active theme button
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-theme="${theme}"]`).classList.add('active');
+        }
+
+        // Navigation Functions
+        function initializeNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const ctaButtons = document.querySelectorAll('[data-page]');
+            const mobileToggle = document.querySelector('.mobile-nav-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    navigateToPage(page);
+                    navLinks.classList.remove('mobile-open');
+                });
+            });
+
+            ctaButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const page = button.dataset.page;
+                    if (page) {
+                        navigateToPage(page);
+                        navLinks.classList.remove('mobile-open');
+                    }
+                });
+            });
+
+            mobileToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('mobile-open');
+            });
+
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.nav-container')) {
+                    navLinks.classList.remove('mobile-open');
+                }
+            });
+        }
+
+        function navigateToPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            // Show target page
+            document.getElementById(page).classList.add('active');
+            document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+
+            AppState.currentPage = page;
+
+            // Initialize page-specific functionality
+            if (page === 'quiz') initializeQuiz();
+            if (page === 'careers') initializeCareers();
+            if (page === 'colleges') initializeColleges();
+            if (page === 'timeline') initializeTimeline();
+            if (page === 'resources') initializeResources();
+            if (page === 'profile') initializeProfile();
+        }
+
+        // Quiz Functions
+        function initializeQuiz() {
+            AppState.currentQuestionIndex = 0;
+            AppState.quizAnswers = [];
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const question = QUIZ_QUESTIONS[AppState.currentQuestionIndex];
+            const progress = ((AppState.currentQuestionIndex + 1) / QUIZ_QUESTIONS.length) * 100;
+            
+            document.getElementById('progress').style.width = `${progress}%`;
+            
+            const quizContent = document.getElementById('quiz-content');
+            quizContent.innerHTML = `
+                <div class="question-card">
+                    <div class="question-title">
+                        Question ${AppState.currentQuestionIndex + 1} of ${QUIZ_QUESTIONS.length}
+                    </div>
+                    <h3>${question.question}</h3>
+                    <div class="options">
+                        ${question.options.map((option, index) => `
+                            <div class="option" data-value="${option.value}" onclick="selectOption(this)">
+                                <i class="fas fa-circle" style="margin-right: 10px;"></i>
+                                ${option.text}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+        }
+
+        function selectOption(element) {
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            AppState.quizAnswers[AppState.currentQuestionIndex] = element.dataset.value;
+
+            if (AppState.currentQuestionIndex < QUIZ_QUESTIONS.length - 1) {
+                document.getElementById('next-btn').style.display = 'inline-block';
+                document.getElementById('next-btn').onclick = nextQuestion;
+            } else {
+                document.getElementById('submit-btn').style.display = 'inline-block';
+                document.getElementById('submit-btn').onclick = submitQuiz;
+            }
+        }
+
+        function nextQuestion() {
+            AppState.currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        function submitQuiz() {
+            const results = analyzeQuizResults();
+            displayQuizResults(results);
+            AppState.quizResults = results;
+        }
+
+        function analyzeQuizResults() {
+            const counts = {};
+            AppState.quizAnswers.forEach(answer => {
+                counts[answer] = (counts[answer] || 0) + 1;
+            });
+
+            const recommended = Object.keys(counts).reduce((a, b) => 
+                counts[a] > counts[b] ? a : b
+            );
+
+            const recommendations = {
+                engineering: {
+                    stream: "Engineering",
+                    careers: ["Software Engineer", "Data Scientist", "Mechanical Engineer", "Electrical Engineer"],
+                    courses: ["B.Tech Computer Science", "B.Tech Mechanical", "B.Tech Electrical"],
+                    description: "You have a strong analytical mind and enjoy solving complex problems!"
+                },
+                commerce: {
+                    stream: "Commerce & Management",
+                    careers: ["Chartered Accountant", "Investment Banker", "Business Analyst", "Management Consultant"],
+                    courses: ["B.Com", "BBA", "CA Foundation", "CS Executive"],
+                    description: "You have excellent business acumen and leadership potential!"
+                },
+                medical: {
+                    stream: "Medical & Healthcare",
+                    careers: ["Doctor", "Medical Researcher", "Healthcare Administrator", "Physiotherapist"],
+                    courses: ["MBBS", "BDS", "BAMS", "B.Pharm"],
+                    description: "You have a caring nature and want to make a difference in people's lives!"
+                },
+                science: {
+                    stream: "Pure Sciences",
+                    careers: ["Research Scientist", "Lab Technician", "Environmental Scientist", "Biotechnologist"],
+                    courses: ["B.Sc Physics", "B.Sc Chemistry", "B.Sc Biology", "B.Sc Mathematics"],
+                    description: "You have a curious mind and love exploring the mysteries of science!"
+                },
+                arts: {
+                    stream: "Arts & Creative",
+                    careers: ["Graphic Designer", "Writer", "Digital Marketer", "UI/UX Designer"],
+                    courses: ["BA English", "BFA", "B.Des", "BA Psychology"],
+                    description: "You are creative and have a unique perspective on the world!"
+                }
+            };
+
+            return recommendations[recommended] || recommendations.engineering;
+        }
+
+        function displayQuizResults(results) {
+            document.getElementById('quiz-content').innerHTML = `
+                <div class="quiz-result">
+                    <h2><i class="fas fa-trophy"></i> Quiz Complete!</h2>
+                    <h3>Recommended Stream: ${results.stream}</h3>
+                    <p>${results.description}</p>
+                    
+                    <div style="margin: 2rem 0;">
+                        <h4><i class="fas fa-briefcase"></i> Career Options:</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin: 1rem 0;">
+                            ${results.careers.map(career => `
+                                <span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px;">
+                                    ${career}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 2rem 0;">
+                        <h4><i class="fas fa-graduation-cap"></i> Recommended Courses:</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin: 1rem 0;">
+                            ${results.courses.map(course => `
+                                <span style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px;">
+                                    ${course}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <button class="btn btn-secondary" onclick="navigateToPage('colleges')">
+                            Find Colleges <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button class="btn btn-secondary" onclick="initializeQuiz()" style="margin-left: 1rem;">
+                            Retake Quiz <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+        }
+
+        // Careers Functions
+        function initializeCareers() {
+            const careerGrid = document.getElementById('career-grid');
+            careerGrid.innerHTML = CAREER_PATHS.map(path => `
+                <div class="career-card">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <i class="${path.icon}" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                        <h3>${path.title}</h3>
+                        <p style="color: var(--text-color); opacity: 0.8; margin-top: 1rem;">${path.description}</p>
+                    </div>
+                    
+                    <div class="career-path-container">
+                        <h4 style="margin-bottom: 1rem; color: var(--text-color);">Career Progression:</h4>
+                        ${path.path.map((step, index) => `
+                            <div class="career-path" style="display: flex; align-items: center; margin-bottom: 1rem;">
+                                <div style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 20px; white-space: nowrap; font-size: 0.9rem;">
+                                    ${step}
+                                </div>
+                                ${index < path.path.length - 1 ? '<i class="fas fa-arrow-right" style="color: var(--primary-color); margin: 0 1rem;"></i>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="navigateToPage('colleges')">
+                            Find Colleges <i class="fas fa-university"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Colleges Functions
+        let map;
+
+        function initializeColleges() {
+            displayColleges(COLLEGES_DATA);
+            initializeMap();
+            setupCollegeFilters();
+        }
+
+        function initializeMap() {
+            if (map) {
+                map.remove();
+            }
+
+            map = L.map('map').setView([20.5937, 78.9629], 5);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            COLLEGES_DATA.forEach(college => {
+                const marker = L.marker(college.coordinates)
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="min-width: 200px;">
+                            <h4>${college.name}</h4>
+                            <p><strong>Stream:</strong> ${college.stream}</p>
+                            <p><strong>Location:</strong> ${college.location}</p>
+                            <p><strong>Courses:</strong> ${college.courses.join(', ')}</p>
+                            <button class="btn btn-primary" style="margin-top: 10px; padding: 5px 10px;" 
+                                    onclick="showCollegeDetails(${college.id})">
+                                View Details
+                            </button>
+                        </div>
+                    `);
+            });
+        }
+
+        function displayColleges(colleges) {
+            const collegeList = document.getElementById('college-list');
+            collegeList.innerHTML = colleges.map(college => `
+                <div class="college-card" data-stream="${college.stream}" data-location="${college.location}" style="position: relative;">
+                    <button class="bookmark-btn ${AppState.bookmarkedColleges.includes(college.id) ? 'bookmarked' : ''}" 
+                            onclick="toggleBookmark(${college.id})">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                    
+                    <h3>${college.name}</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> ${college.location}</p>
+                    <p><i class="fas fa-graduation-cap"></i> ${college.stream}</p>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Courses:</strong>
+                        <div style="margin-top: 0.5rem;">
+                            ${college.courses.map(course => `
+                                <span style="background: var(--border-color); color: var(--text-color); padding: 0.2rem 0.5rem; border-radius: 10px; margin-right: 0.5rem; font-size: 0.9rem;">
+                                    ${course}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <p><strong>Cutoff:</strong> ${college.cutoff}</p>
+                        <p><strong>Fees:</strong> ${college.fees}</p>
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <strong>Facilities:</strong>
+                        <div style="margin-top: 0.5rem;">
+                            ${college.facilities.map(facility => `
+                                <span style="color: var(--primary-color); margin-right: 1rem;">
+                                    <i class="fas fa-check-circle"></i> ${facility}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="showCollegeDetails(${college.id})">
+                            View Details <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupCollegeFilters() {
+            const locationFilter = document.getElementById('location-filter');
+            const streamFilter = document.getElementById('stream-filter');
+            const mapViewBtn = document.getElementById('map-view');
+            const listViewBtn = document.getElementById('list-view');
+
+            locationFilter.addEventListener('change', filterColleges);
+            streamFilter.addEventListener('change', filterColleges);
+
+            mapViewBtn.addEventListener('click', () => {
+                document.getElementById('map-container').style.display = 'block';
+                mapViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+                
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                }, 100);
+            });
+
+            listViewBtn.addEventListener('click', () => {
+                document.getElementById('map-container').style.display = 'none';
+                mapViewBtn.classList.remove('active');
+                listViewBtn.classList.add('active');
+            });
+        }
+
+        function filterColleges() {
+            const locationFilter = document.getElementById('location-filter').value;
+            const streamFilter = document.getElementById('stream-filter').value;
+
+            const filtered = COLLEGES_DATA.filter(college => {
+                const matchLocation = !locationFilter || college.location === locationFilter;
+                const matchStream = !streamFilter || college.stream === streamFilter;
+                return matchLocation && matchStream;
+            });
+
+            displayColleges(filtered);
+        }
+
+        function toggleBookmark(collegeId) {
+            const index = AppState.bookmarkedColleges.indexOf(collegeId);
+            if (index > -1) {
+                AppState.bookmarkedColleges.splice(index, 1);
+            } else {
+                AppState.bookmarkedColleges.push(collegeId);
+            }
+            
+            // Update bookmark button appearance
+            const bookmarkBtn = document.querySelector(`[onclick="toggleBookmark(${collegeId})"]`);
+            if (bookmarkBtn) {
+                bookmarkBtn.classList.toggle('bookmarked');
+            }
+        }
+
+        function showCollegeDetails(collegeId) {
+            const college = COLLEGES_DATA.find(c => c.id === collegeId);
+            if (!college) return;
+
+            const modal = document.getElementById('college-modal');
+            const modalBody = document.getElementById('modal-body');
+            
+            modalBody.innerHTML = `
+                <h2>${college.name}</h2>
+                <div style="margin: 1rem 0;">
+                    <p><i class="fas fa-map-marker-alt"></i> <strong>Location:</strong> ${college.location}</p>
+                    <p><i class="fas fa-graduation-cap"></i> <strong>Stream:</strong> ${college.stream}</p>
+                    <p><i class="fas fa-rupee-sign"></i> <strong>Fees:</strong> ${college.fees}</p>
+                    <p><i class="fas fa-chart-line"></i> <strong>Cutoff:</strong> ${college.cutoff}</p>
+                    <p><i class="fas fa-envelope"></i> <strong>Contact:</strong> ${college.contact}</p>
+                </div>
+                
+                <div style="margin: 1rem 0;">
+                    <h4>Courses Offered:</h4>
+                    <div style="margin-top: 0.5rem;">
+                        ${college.courses.map(course => `
+                            <span style="background: var(--primary-color); color: white; padding: 0.3rem 0.8rem; border-radius: 15px; margin-right: 0.5rem; margin-bottom: 0.5rem; display: inline-block;">
+                                ${course}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="margin: 1rem 0;">
+                    <h4>Facilities:</h4>
+                    <div style="margin-top: 0.5rem;">
+                        ${college.facilities.map(facility => `
+                            <div style="margin-bottom: 0.5rem;">
+                                <i class="fas fa-check-circle" style="color: var(--success-color); margin-right: 0.5rem;"></i>
+                                ${facility}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="toggleBookmark(${college.id}); showCollegeDetails(${college.id})">
+                        <i class="fas fa-bookmark"></i> 
+                        ${AppState.bookmarkedColleges.includes(college.id) ? 'Remove Bookmark' : 'Bookmark'}
+                    </button>
+                    <button class="btn btn-secondary" style="margin-left: 1rem;" onclick="window.open('mailto:${college.contact}')">
+                        <i class="fas fa-envelope"></i> Contact
+                    </button>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        // Timeline Functions
+        function initializeTimeline() {
+            const timelineContainer = document.getElementById('timeline-container');
+            
+            // Sort events by date
+            const sortedEvents = TIMELINE_EVENTS.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            timelineContainer.innerHTML = sortedEvents.map(event => {
+                const eventDate = new Date(event.date);
+                const today = new Date();
+                const isUpcoming = eventDate > today;
+                const daysUntil = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+                
+                return `
+                    <div class="timeline-item">
+                        <div class="timeline-date ${event.urgent ? 'urgent' : ''}">
+                            ${eventDate.toLocaleDateString('en-IN', { 
+                                day: 'numeric', 
+                                month: 'short', 
+                                year: 'numeric' 
+                            })}
+                        </div>
+                        <div style="flex: 1;">
+                            <h4>${event.title}</h4>
+                            <p>${event.description}</p>
+                            <div style="margin-top: 0.5rem;">
+                                <span style="background: var(--border-color); color: var(--text-color); padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem;">
+                                    ${event.category}
+                                </span>
+                                ${isUpcoming && daysUntil > 0 ? `
+                                    <span style="background: var(--warning-color); color: white; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; margin-left: 0.5rem;">
+                                        ${daysUntil} days left
+                                    </span>
+                                ` : ''}
+                                ${daysUntil < 0 ? `
+                                    <span style="background: var(--border-color); color: var(--text-color); padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem; margin-left: 0.5rem;">
+                                        Past Event
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Resources Functions
+        function initializeResources() {
+            displayResources(RESOURCES_DATA);
+            setupResourceSearch();
+        }
+
+        function displayResources(resources) {
+            const resourcesGrid = document.getElementById('resources-grid');
+            resourcesGrid.innerHTML = resources.map(resource => `
+                <div class="resource-card">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <i class="${resource.icon}" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                        <h3>${resource.title}</h3>
+                        <div style="margin: 1rem 0;">
+                            <span style="background: var(--primary-color); color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.9rem;">
+                                ${resource.type}
+                            </span>
+                            <span style="background: var(--border-color); color: var(--text-color); padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.9rem; margin-left: 0.5rem;">
+                                ${resource.category}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <p style="color: var(--text-color); opacity: 0.8; margin-bottom: 2rem;">${resource.description}</p>
+                    
+                    <div style="text-align: center;">
+                        <button class="btn btn-primary" onclick="accessResource(${resource.id})">
+                            <i class="fas fa-external-link-alt"></i> Access Resource
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupResourceSearch() {
+            const searchBar = document.getElementById('resource-search');
+            searchBar.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filtered = RESOURCES_DATA.filter(resource => 
+                    resource.title.toLowerCase().includes(searchTerm) ||
+                    resource.description.toLowerCase().includes(searchTerm) ||
+                    resource.category.toLowerCase().includes(searchTerm) ||
+                    resource.type.toLowerCase().includes(searchTerm)
+                );
+                displayResources(filtered);
+            });
+        }
+
+        function accessResource(resourceId) {
+            const resource = RESOURCES_DATA.find(r => r.id === resourceId);
+            if (resource) {
+                alert(`Accessing ${resource.title}...\n\nThis would normally open the resource or redirect to the appropriate platform.`);
+            }
+        }
+
+        // Profile Functions
+        function initializeProfile() {
+            const loginBtn = document.getElementById('login-btn');
+            const signupBtn = document.getElementById('signup-btn');
+            
+            loginBtn.addEventListener('click', handleLogin);
+            signupBtn.addEventListener('click', handleSignup);
+            
+            // Check if user is already logged in
+            if (AppState.user) {
+                showProfileContent();
+            }
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password) {
+                // Simulate login
+                AppState.user = {
+                    username: username,
+                    email: `${username}@example.com`,
+                    joinDate: new Date().toLocaleDateString(),
+                    quizzesTaken: Math.floor(Math.random() * 5) + 1,
+                    bookmarkedColleges: AppState.bookmarkedColleges.length
+                };
+                showProfileContent();
+            } else {
+                alert('Please enter both username and password');
+            }
+        }
+
+        function handleSignup() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password) {
+                // Simulate signup
+                AppState.user = {
+                    username: username,
+                    email: `${username}@example.com`,
+                    joinDate: new Date().toLocaleDateString(),
+                    quizzesTaken: 0,
+                    bookmarkedColleges: 0
+                };
+                showProfileContent();
+                alert('Account created successfully!');
+            } else {
+                alert('Please enter both username and password');
+            }
+        }
+
+        function showProfileContent() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('profile-content').style.display = 'block';
+            
+            const profileContent = document.getElementById('profile-content');
+            profileContent.innerHTML = `
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1rem;">
+                        ${AppState.user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <h3>Welcome, ${AppState.user.username}!</h3>
+                    <p style="opacity: 0.8;">Member since ${AppState.user.joinDate}</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                    <div style="background: var(--bg-color); padding: 1.5rem; border-radius: 10px; text-align: center; border: 1px solid var(--border-color);">
+                        <i class="fas fa-question-circle" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                        <h4>${AppState.user.quizzesTaken}</h4>
+                        <p>Quizzes Taken</p>
+                    </div>
+                    <div style="background: var(--bg-color); padding: 1.5rem; border-radius: 10px; text-align: center; border: 1px solid var(--border-color);">
+                        <i class="fas fa-bookmark" style="font-size: 2rem; color: var(--accent-color); margin-bottom: 0.5rem;"></i>
+                        <h4>${AppState.bookmarkedColleges.length}</h4>
+                        <p>Bookmarked Colleges</p>
+                    </div>
+                </div>
+                
+                <div style="margin: 2rem 0;">
+                    <h4>Quick Actions</h4>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="navigateToPage('quiz')">
+                            <i class="fas fa-play"></i> Take Quiz
+                        </button>
+                        <button class="btn btn-secondary" onclick="navigateToPage('colleges')">
+                            <i class="fas fa-university"></i> Find Colleges
+                        </button>
+                        <button class="btn btn-secondary" onclick="navigateToPage('resources')">
+                            <i class="fas fa-book"></i> Browse Resources
+                        </button>
+                    </div>
+                </div>
+                
+                ${AppState.quizResults ? `
+                    <div style="margin: 2rem 0; padding: 1.5rem; background: var(--bg-color); border-radius: 10px; border: 1px solid var(--border-color);">
+                        <h4><i class="fas fa-chart-pie"></i> Your Quiz Results</h4>
+                        <p><strong>Recommended Stream:</strong> ${AppState.quizResults.stream}</p>
+                        <p style="margin-top: 0.5rem;">${AppState.quizResults.description}</p>
+                        <button class="btn btn-primary" onclick="navigateToPage('quiz')" style="margin-top: 1rem;">
+                            Retake Quiz
+                        </button>
+                    </div>
+                ` : ''}
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="btn btn-secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            `;
+        }
+
+        function logout() {
+            AppState.user = null;
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('profile-content').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Modal Functions
+        function initializeModal() {
+            const modal = document.getElementById('college-modal');
+            const closeBtn = document.querySelector('.close');
+            
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeThemes();
+            initializeNavigation();
+            initializeModal();
+            
+            // Initialize the home page by default
+            initializeCareers();
+        });
+    </script>
+</body>
+</html>
